@@ -1,7 +1,9 @@
 import Vorpal from "vorpal"
 import {
-  calculateLemonadePrice,
-  calculateOrderTotal,
+  buildQuestionArray,
+  createLemonade,
+  addLemonadeToOrder,
+  updateOrderTotal,
   writeFileSync,
   readAllFiles,
 } from "./lib"
@@ -25,17 +27,7 @@ vorpal
     "Creates an order and saves to JSON file"
   )
   .action(function (args, callback) {
-    const order = {
-      total: 0,
-      lemonades: [],
-      customer: {
-        name: args.name,
-        phoneNumber: args.phoneNumber,
-      },
-      lemonadeStand: {
-        name: "My Lemonade Stand",
-      },
-    }
+
 
     this.prompt(
       {
@@ -45,59 +37,38 @@ vorpal
         message: "How many lemonades would you like to order?",
       },
       ({ numLemonades }) => {
-        let lemonade = {}
-        let questions = []
-        for (let i = 1; i <= Number.parseInt(numLemonades); i++) {
-          questions.push({
-            type: "number",
-            name: "lemonJuice" + i,
-            default: 1,
-            message: `How much lemonJuice in your lemonade ${i} ?`,
-          })
+        const questions = [...Array(Number.parseInt(numLemonades))].flatMap(
+          buildQuestionArray
+        )
 
-          questions.push({
-            type: "number",
-            name: "water" + i,
-            default: 1,
-            message: `How much water in your lemonade ${i} ?`,
-          })
-
-          questions.push({
-            type: "number",
-            name: "sugar" + i,
-            default: 1,
-            message: `How much sugar in your lemonade ${i} ?`,
-          })
-
-          questions.push({
-            type: "number",
-            name: "iceCubes" + i,
-            default: 1,
-            message: `How many iceCubes in your lemonade ${i} ?`,
-          })
-        }
+        // const questions = []
+        // for (let i = 1; i <= Number.parseInt(numLemonades); i++) {
+        //   questions = buildQuestionArray(questions, i)
+        // }
 
         this.prompt(questions, (response) => {
-          //Create a lemonade obj for each lemonade in the order
-          for (let i = 1; i <= numLemonades; i++) {
-            order.lemonades.push({
-              lemonJuice: Number.parseInt(response["lemonJuice" + i]),
-              water: Number.parseInt(response["water" + i]),
-              sugar: Number.parseInt(response["sugar" + i]),
-              iceCubes: Number.parseInt(response["iceCubes" + i]),
-            })
-          }
+          // for (let i = 1; i <= numLemonades; i++) {
+          //   order = updateOrderTotal(
+          //     addLemonadeToOrder(order, createLemonade(response, i))
+          //   )
+          // }
 
-          //Set price of each lemonade in the order
-          for (let lemonade of order.lemonades) {
-            lemonade.price = calculateLemonadePrice(lemonade)
-            lemonade.price = Number(lemonade.price.toFixed(2))
-          }
+          const order = updateOrderTotal(
+            [...Array(Number.parseInt(numLemonades))]
+              .map(createLemonade(response))
+              .reduce(addLemonadeToOrder,  {
+                total: 0,
+                lemonades: [],
+                customer: {
+                  name: args.name,
+                  phoneNumber: args.phoneNumber,
+                },
+                lemonadeStand: {
+                  name: "My Lemonade Stand",
+                }
+              })
+          )
 
-          order.total = calculateOrderTotal(order)
-          order.total = Number(order.total.toFixed(2))
-
-          this.log(order)
           writeFileSync(
             order.lemonadeStand.name + "/" + order.customer.name + ".json",
             order
