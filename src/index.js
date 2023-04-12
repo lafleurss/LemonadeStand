@@ -27,8 +27,6 @@ vorpal
     "Creates an order and saves to JSON file"
   )
   .action(function (args, callback) {
-
-
     this.prompt(
       {
         type: "number",
@@ -37,22 +35,9 @@ vorpal
         message: "How many lemonades would you like to order?",
       },
       ({ numLemonades }) => {
-        const questions = [...Array(Number.parseInt(numLemonades))].flatMap(
-          buildQuestionArray
-        )
-
-        // const questions = []
-        // for (let i = 1; i <= Number.parseInt(numLemonades); i++) {
-        //   questions = buildQuestionArray(questions, i)
-        // }
+        const questions = [...Array(Number.parseInt(numLemonades))].flatMap(buildQuestionArray)
 
         this.prompt(questions, (response) => {
-          // for (let i = 1; i <= numLemonades; i++) {
-          //   order = updateOrderTotal(
-          //     addLemonadeToOrder(order, createLemonade(response, i))
-          //   )
-          // }
-
           const order = updateOrderTotal(
             [...Array(Number.parseInt(numLemonades))]
               .map(createLemonade(response))
